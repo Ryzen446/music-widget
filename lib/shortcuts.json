@@ -1,0 +1,26 @@
+{
+  "quit": {
+    "modifiers": 7,
+    "key": 81
+  },
+  "toggle": {
+    "modifiers": 6,
+    "key": 77
+  },
+  "volumeUp": {
+    "modifiers": 7,
+    "key": 38
+  },
+  "volumeDown": {
+    "modifiers": 7,
+    "key": 40
+  },
+  "pause": {
+    "modifiers": 7,
+    "key": 32
+  },
+  "next": {
+    "modifiers": 7,
+    "key": 39
+  }
+}

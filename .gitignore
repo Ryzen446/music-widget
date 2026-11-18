@@ -1,0 +1,16 @@
+/settings.json
+/settings.json.*
+/playlists.json
+/playlists.json.*
+/musique/
+/webview-profile/
+/bin/
+/lib/MusicWidget.Native.dll
+/artifacts/
+/frontend/dist/
+/frontend/node_modules/
+/frontend/playwright-report/
+/frontend/test-results/
+.env
+.env.*
+*.log
