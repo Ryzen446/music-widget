@@ -1,10 +1,10 @@
-# Music Widget
+# Music Widget — Local Music Player for Windows
 
-**A Liquid Glass music player for your Windows desktop.** Play local audio, organize playlists and keep playback controls within reach. Choose a single-line widget or a resizable player, then tint the glass to suit your desktop.
+**A free, open-source music player for Windows with an always-on-top mini player.** Play your local MP3, FLAC, WAV and M4A files offline and organize them into playlists. Use the slim Minimalist layout for quick playback controls, or switch to the resizable Compact layout for an audio visualizer. Both layouts have customizable Liquid Glass colors.
 
 [**Download for Windows**](https://github.com/Ryzen446/music-widget/releases/latest/download/MusicWidget-Windows.zip) · [Quick start](#quick-start) · [Screenshots](#screenshots) · [Français](README.fr.md)
 
-![Music Widget on a Windows desktop, with a blue Compact player and a rose-tinted Minimalist widget](docs/screenshots/hero.webp)
+![Music Widget for Windows, showing a rose-colored mini player and a blue Compact player with an audio visualizer](docs/screenshots/hero.webp)
 
 ## Quick start
 

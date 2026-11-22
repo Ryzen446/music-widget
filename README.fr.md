@@ -1,10 +1,10 @@
-# Music Widget
+# Music Widget — Lecteur de musique pour Windows
 
-**Un lecteur musical Liquid Glass pour le bureau Windows.** Écoute tes fichiers, organise tes playlists et garde les commandes de lecture à portée de main. Choisis un widget sur une ligne ou un lecteur redimensionnable, puis règle la teinte du verre.
+**Un lecteur de musique gratuit et open source pour Windows, avec un mini-lecteur toujours au premier plan.** Écoute tes fichiers MP3, FLAC, WAV et M4A hors ligne et organise-les en playlists. Le mode Minimaliste tient sur une ligne. Le mode Compact est redimensionnable et affiche un visualiseur audio. Les deux modes proposent des couleurs Liquid Glass personnalisables.
 
 [**Télécharger pour Windows**](https://github.com/Ryzen446/music-widget/releases/latest/download/MusicWidget-Windows.zip) · [Voir la galerie](README.md#screenshots) · [English](README.md)
 
-![Music Widget sur le bureau avec ses modes Compact et Minimaliste](docs/screenshots/hero.webp)
+![Music Widget pour Windows avec un mini-lecteur rose et un lecteur Compact bleu doté d’un visualiseur audio](docs/screenshots/hero.webp)
 
 ## Démarrage rapide
 
