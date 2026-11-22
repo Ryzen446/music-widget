@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using MusicWidget.NativeMini;
 
 namespace MusicWidget.NativeApp
 {
@@ -30,8 +31,6 @@ namespace MusicWidget.NativeApp
     {
         internal static readonly Brush SubtleInk = ColorBrush(255, 191, 201, 216);
         internal static readonly Brush DangerInk = ColorBrush(255, 255, 125, 114);
-        private static readonly Brush Inset = ColorBrush(86, 13, 14, 24);
-        private static readonly Brush Edge = ColorBrush(42, 235, 242, 255);
 
         internal static Brush ColorBrush(byte alpha, byte red, byte green, byte blue)
         {
@@ -45,19 +44,6 @@ namespace MusicWidget.NativeApp
             return ColorBrush(alpha, aura.R, aura.G, aura.B);
         }
 
-        internal static Brush Material(Color aura, bool menu)
-        {
-            byte r = (byte)Math.Round(aura.R * .26 + 21 * .74);
-            byte g = (byte)Math.Round(aura.G * .26 + 16 * .74);
-            byte b = (byte)Math.Round(aura.B * .26 + 24 * .74);
-            var brush = new LinearGradientBrush(
-                menu ? Color.FromArgb(248, (byte)(r * .86 + 35), (byte)(g * .86 + 35), (byte)(b * .86 + 35)) : Color.FromArgb(72, aura.R, aura.G, aura.B),
-                menu ? Color.FromArgb(248, r, g, b) : Color.FromArgb(26, aura.R, aura.G, aura.B),
-                new Point(0, 0), new Point(.65, 1));
-            brush.Freeze();
-            return brush;
-        }
-
         internal static Border Track(UIElement child, double radius = 22)
         {
             var track = new Border { Child = child };
@@ -69,8 +55,8 @@ namespace MusicWidget.NativeApp
         {
             track.CornerRadius = new CornerRadius(radius);
             track.BorderThickness = new Thickness(1);
-            track.BorderBrush = Edge;
-            track.Background = Inset;
+            track.BorderBrush = ControlGlass.WellEdge;
+            track.Background = ControlGlass.WellFill;
         }
 
         internal static Grid Split(params FrameworkElement[] children)

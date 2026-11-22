@@ -734,11 +734,8 @@ namespace MusicWidget.NativeApp
             title.VerticalAlignment = VerticalAlignment.Center;
             title.TextTrimming = TextTrimming.CharacterEllipsis;
             grid.Children.Add(title);
-            var surface = new Border
-            {
-                Background = PanelKit.Material(window.Glass.Aura, false), CornerRadius = new CornerRadius(14),
-                BorderBrush = PanelKit.ColorBrush(72, 235, 241, 255), BorderThickness = new Thickness(1), Child = grid
-            };
+            var surface = window.Glass.Popover(grid, 14, embedded: true);
+            surface.Padding = new Thickness(0);
             active = surface;
             Children.Add(surface);
             UpdatePickerRim();
@@ -762,8 +759,7 @@ namespace MusicWidget.NativeApp
 
         private void UpdatePickerRim()
         {
-            active.BorderBrush = track.Included || track.Selected
-                ? PanelKit.ColorBrush(173, 229, 239, 255) : PanelKit.ColorBrush(72, 235, 241, 255);
+            active.BorderBrush = track.Included || track.Selected ? PanelKit.ColorBrush(173, 229, 239, 255) : null;
         }
 
         private void ApplyCurrent()

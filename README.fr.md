@@ -24,6 +24,16 @@ Appuie sur **Ctrl+Maj+M** pour afficher ou masquer le lecteur. Le menu de l’ic
 - **Des commandes accessibles.** Configure des raccourcis globaux pour afficher ou masquer le lecteur, mettre en pause, changer de titre, régler le volume ou quitter. Le lecteur propose aussi une minuterie, la vitesse de lecture et le premier plan.
 - **Recherche et écoute intégrées.** Avec les outils en ligne facultatifs, découvre des résultats YouTube avec miniatures, écoute avant d’enregistrer et choisis la bibliothèque ou une playlist. Le panneau affiche la progression en octets lorsque la taille totale est disponible.
 
+## Captures d’écran
+
+Les captures proviennent de la version native C# et WPF avec des morceaux de démonstration. [Galerie complète](README.md#screenshots)
+
+| Minimaliste en six couleurs | Compact avec visualiseur |
+| --- | --- |
+| [![Six couleurs du lecteur Minimaliste](docs/screenshots/minimalist-auras.webp)](docs/screenshots/minimalist-auras.webp) | [![Lecteur Compact bleu avec visualiseur](docs/screenshots/compact.webp)](docs/screenshots/compact.webp) |
+| **Menu Minimaliste** | **Menu Compact** |
+| [![Menu ouvert dans le lecteur Minimaliste](docs/screenshots/glass-menu.webp)](docs/screenshots/glass-menu.webp) | [![Menu Liquid Glass ouvert sur le lecteur Compact](docs/screenshots/compact-menu.webp)](docs/screenshots/compact-menu.webp) |
+
 ## Outils en ligne facultatifs
 
 Dans une version qui propose la configuration des outils en ligne, ouvre **⋯ → Ajouter de la musique** puis **Activer les outils en ligne**. Le lecteur télécharge les copies manquantes de yt-dlp, Deno, FFmpeg et ffprobe, puis vérifie leurs sommes SHA-256. Il utilise `%LOCALAPPDATA%\MusicWidget\Data\bin` pour la version installée ou `bin` à côté de la version portable. La lecture et les playlists locales sont disponibles dès le premier lancement.

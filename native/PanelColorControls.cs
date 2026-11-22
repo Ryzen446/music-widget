@@ -312,10 +312,9 @@ namespace MusicWidget.NativeApp
             "ThumbProgress", typeof(double), typeof(PanelToggle), new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
         private static readonly DependencyProperty LensProperty = DependencyProperty.Register("Lens", typeof(double), typeof(PanelToggle),
             new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
-        private static readonly Brush Off = PanelKit.ColorBrush(98, 7, 8, 16);
         private static readonly Brush Knob = PanelColorPlane.Gradient(Color.FromArgb(203, 255, 255, 255),
             Color.FromArgb(110, 219, 231, 255), new Point(0, 0), new Point(.8, 1));
-        private static readonly Pen Edge = PanelColorPlane.Stroke(Color.FromArgb(76, 255, 255, 255), .7);
+        private static readonly Pen WellEdge = CreateWellEdge();
         private static readonly Pen Highlight = PanelColorPlane.Stroke(Color.FromArgb(184, 255, 255, 255), .9);
 
         internal PanelToggle(Func<bool> motion)
@@ -352,12 +351,24 @@ namespace MusicWidget.NativeApp
         protected override void OnRender(DrawingContext dc)
         {
             if (ActualWidth < 4 || ActualHeight < 4) return;
-            bool enabled = IsChecked == true;
-            var bounds = new Rect(.5, .5, ActualWidth - 1, ActualHeight - 1);
-            dc.DrawRoundedRectangle(enabled ? Background : Off, IsKeyboardFocused && Glass.ShowKeyboardFocus(this) ? Highlight : Edge, bounds, 14, 14);
+            bool focused = IsKeyboardFocused && Glass.ShowKeyboardFocus(this);
+            var bounds = new Rect(RenderSize);
+            if (IsChecked == true) ControlGlass.Draw(dc, bounds, 14, Background, focused, lift: false);
+            else
+            {
+                bounds.Inflate(-.5, -.5);
+                dc.DrawRoundedRectangle(ControlGlass.WellFill, focused ? Highlight : WellEdge, bounds, 14, 14);
+            }
             var thumb = Glass.LensBounds(new Rect(3 + (ActualWidth - 36) * (double)GetValue(ThumbProgressProperty), 3, 30, ActualHeight - 6),
                 Math.Max(0, (double)GetValue(LensProperty)), .22, .30);
-            dc.DrawRoundedRectangle(IsPressed ? Glass.HeldLens : Knob, Highlight, thumb, thumb.Height / 2, thumb.Height / 2);
+            ControlGlass.Draw(dc, thumb, thumb.Height / 2, IsPressed ? Glass.HeldLens : Knob);
+        }
+
+        private static Pen CreateWellEdge()
+        {
+            var pen = new Pen(ControlGlass.WellEdge, 1);
+            pen.Freeze();
+            return pen;
         }
     }
 }

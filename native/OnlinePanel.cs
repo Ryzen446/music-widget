@@ -534,10 +534,9 @@ namespace MusicWidget.NativeApp
             Grid.SetColumn(download, 3);
             grid.Children.Add(download);
             rows.Add(new SearchRow { Item = item, Play = play, Download = download });
-            var material = window.Glass.Popover(grid, 14);
+            var material = window.Glass.Popover(grid, 14, embedded: true);
             material.Margin = new Thickness(0, 0, 4, 9);
             material.Padding = new Thickness(0);
-            material.Background = PanelKit.Material(window.Glass.Aura, false);
             return material;
         }
 

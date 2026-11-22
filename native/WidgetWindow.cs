@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Microsoft.Win32;
 using Mini = MusicWidget.NativeMini;
 using Forms = System.Windows.Forms;
 
@@ -119,11 +120,18 @@ namespace MusicWidget.NativeApp
                     return IntPtr.Zero;
                 });
             }
-            acrylic = !SystemParameters.HighContrast && NativeBackdrop.Apply(handle, true) >= 0 &&
+            acrylic = !SystemParameters.HighContrast && WindowsTransparencyEnabled() && NativeBackdrop.Apply(handle, true) >= 0 &&
                 NativeBackdrop.TrySetPlayerAcrylic(handle, true);
             if (shell != null) shell.SetBackdrop(acrylic);
             ApplyWindowBounds();
             ApplyRegion();
+        }
+
+        private static bool WindowsTransparencyEnabled()
+        {
+            const string theme = @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
+            var value = Registry.GetValue(theme, "EnableTransparency", 1);
+            return !(value is int) || (int)value != 0;
         }
 
         private void ResolveLanguage()

@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 [CmdletBinding()]
 param(
-    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '6.1.4',
+    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '6.1.5',
     [string]$OutputDirectory,
     [string]$CompilerPath,
     [switch]$SmokeTest

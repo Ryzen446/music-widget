@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using Mini = MusicWidget.NativeMini;
 
@@ -212,6 +213,7 @@ namespace MusicWidget.NativeApp
             trigger.Unloaded -= AnchorUnloaded;
             CompositionTarget.Rendering -= RenderFloaterRegion;
             PanelKit.ResetPopoverAnimation(surface);
+            GlassUi.SetFlyoutBackdrop(surface, null);
             glassHost.Children.Remove(surface);
             ApplyHostBounds();
         }
@@ -300,9 +302,39 @@ namespace MusicWidget.NativeApp
             KeyboardNavigation.SetTabNavigation(surface, KeyboardNavigationMode.Cycle);
             surface.Width = width / zoom;
             surface.Height = height / zoom;
+            var overlap = Rect.Intersect(paneBounds, floaterBounds);
+            if (acrylic && RenderCapability.Tier != 0 && overlap.Width >= 8 * zoom && overlap.Height >= 8 * zoom)
+                GlassUi.SetFlyoutBackdrop(surface, CreateFlyoutBackdrop(zoom));
             if (Motion) AnimateFloater(true);
             ApplyHostBounds();
             FocusFloater();
+        }
+
+        private Brush CreateFlyoutBackdrop(double zoom)
+        {
+            // Sample only this window's pane. Windows supplies the separate desktop blur.
+            const double bleed = 8;
+            var width = floaterBounds.Width / zoom;
+            var height = floaterBounds.Height / zoom;
+            var source = new VisualBrush(paneLayer)
+            {
+                ViewboxUnits = BrushMappingMode.Absolute,
+                Viewbox = new Rect(floaterBounds.Left - paneBounds.Left - bleed * zoom,
+                    floaterBounds.Top - paneBounds.Top - bleed * zoom,
+                    floaterBounds.Width + 2 * bleed * zoom, floaterBounds.Height + 2 * bleed * zoom)
+            };
+            var sample = new Border
+            {
+                Width = width + 2 * bleed,
+                Height = height + 2 * bleed,
+                Background = source,
+                Effect = new BlurEffect { Radius = 6, RenderingBias = RenderingBias.Performance }
+            };
+            return new VisualBrush(sample)
+            {
+                ViewboxUnits = BrushMappingMode.Absolute,
+                Viewbox = new Rect(bleed, bleed, width, height)
+            };
         }
 
         private void FocusFloater()

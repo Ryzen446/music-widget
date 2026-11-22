@@ -14,22 +14,37 @@ using MusicWidget.NativeMini;
 
 namespace MusicWidget.NativeApp
 {
-    internal sealed class CapsuleBorder : Border
+    internal class CapsuleBorder : Border
     {
         public CapsuleBorder() { }
+
+        protected virtual bool Raised { get { return false; } }
 
         protected override void OnRender(DrawingContext drawing)
         {
             var bounds = new Rect(RenderSize);
             if (bounds.Width <= 0 || bounds.Height <= 0) return;
             double radius = Math.Min(bounds.Width, bounds.Height) / 2;
+            var solid = Background as SolidColorBrush;
+            if (Raised && Background != null && (solid == null || solid.Color.A != 0))
+            {
+                ControlGlass.Draw(drawing, bounds, radius, Background, BorderBrush == Glass.InkBrush,
+                    edge: BorderBrush == Brushes.Transparent ? null : BorderBrush);
+                return;
+            }
             drawing.DrawRoundedRectangle(Background, null, bounds, radius, radius);
             double stroke = BorderThickness.Left;
-            if (BorderBrush == null || stroke <= 0 || radius <= stroke / 2) return;
+            if (BorderBrush == null || BorderBrush == Brushes.Transparent || stroke <= 0 || radius <= stroke / 2) return;
             bounds.Inflate(-stroke / 2, -stroke / 2);
             radius -= stroke / 2;
             drawing.DrawRoundedRectangle(null, new Pen(BorderBrush, stroke), bounds, radius, radius);
         }
+    }
+
+    internal sealed class RaisedCapsule : CapsuleBorder
+    {
+        public RaisedCapsule() { }
+        protected override bool Raised { get { return true; } }
     }
 
     internal sealed class GlassUi
@@ -45,13 +60,7 @@ namespace MusicWidget.NativeApp
         private const string AcrylicPopupMaterial = "MusicWidget.AcrylicPopupMaterial";
         private const string AcrylicVolumeMaterial = "MusicWidget.AcrylicVolumeMaterial";
         internal const string VisualizerBrushKey = "MusicWidget.Visualizer";
-        private static readonly Brush Edge = Glass.Gradient(Color.FromArgb(139, 255, 255, 255),
-            Color.FromArgb(48, 255, 255, 255), new Point(0, 0), new Point(1, 1));
-        private static readonly Brush PopupRim = Glass.Gradient(Color.FromArgb(218, 255, 255, 255),
-            Color.FromArgb(52, 224, 216, 255), new Point(.04, 0), new Point(.67, .82));
         private static readonly Brush Muted = Glass.Solid(Color.FromRgb(205, 213, 226));
-        private static readonly Brush InputBackground = Glass.Solid(Color.FromArgb(106, 15, 17, 25));
-        private static readonly Brush InputRim = Glass.Solid(Color.FromArgb(41, 255, 255, 255));
         private readonly Style buttonStyle;
         private static readonly Style inputStyle = CreateInputStyle();
         private static readonly ControlTemplate tipTemplate = new ControlTemplate(typeof(ToolTip))
@@ -73,21 +82,21 @@ namespace MusicWidget.NativeApp
             if (resources.Contains(Rest) && Aura == aura) return;
             Aura = aura;
             // WPF can freeze the shared brushes when it seals a control template.
-            resources[Rest] = Shade(aura, 70, 53);
+            resources[Rest] = ControlGlass.Fill(aura);
             resources[Hover] = Glass.Gradient(Glass.Alpha(Glass.Mix(aura, Colors.White, .65), 30),
                 Glass.Alpha(aura, 22), new Point(0, 0), new Point(1, 1));
             resources[Press] = Glass.Solid(Glass.Alpha(Glass.Mix(aura, Colors.White, .45), 25));
             resources[MenuHover] = Glass.Solid(Glass.Mix(aura, Color.FromArgb(18, 255, 255, 255), .13));
-            resources[Selected] = Shade(aura, 134, 88);
+            resources[Selected] = ControlGlass.Fill(aura, true);
             resources[VisualizerBrushKey] = Glass.Gradient(Colors.White, Glass.Alpha(aura, 204), new Point(0, 0), new Point(0, 1));
             Color tint = Glass.Mix(aura, Color.FromRgb(21, 16, 24), .26);
             resources[PopupMaterial] = PopoverTint(tint);
             // Match the effective tint over the already composited desktop,
             // with a lighter edge on the menu and a softer well for volume.
             Color menu = Glass.Mix(aura, tint, .04);
-            resources[AcrylicPopupMaterial] = AcrylicTint(menu, 173, .035, .01);
+            resources[AcrylicPopupMaterial] = AcrylicTint(menu, 157, .035, .01);
             Color volume = Glass.Mix(aura, Color.FromRgb(17, 16, 17), .26);
-            resources[AcrylicVolumeMaterial] = AcrylicTint(volume, 178, .018, .024);
+            resources[AcrylicVolumeMaterial] = AcrylicTint(volume, 167, .018, .024);
             for (int index = surfaces.Count - 1; index >= 0; --index)
             {
                 var element = surfaces[index].Target;
@@ -131,12 +140,6 @@ namespace MusicWidget.NativeApp
             };
             brush.Freeze();
             return brush;
-        }
-
-        private static Brush Shade(Color aura, byte light, byte dark)
-        {
-            return Glass.Gradient(Glass.Alpha(Glass.Mix(Colors.White, aura, .38), light),
-                Glass.Alpha(Glass.Mix(Color.FromRgb(42, 48, 67), aura, .42), dark), new Point(0, 0), new Point(1, 1));
         }
 
         internal void LoadPaneStyles()
@@ -214,7 +217,6 @@ namespace MusicWidget.NativeApp
             if (active)
             {
                 button.SetResourceReference(Control.BackgroundProperty, Selected);
-                button.BorderBrush = PopupRim;
             }
             else button.Background = button.BorderBrush = Brushes.Transparent;
             button.MinHeight = 34;
@@ -223,9 +225,9 @@ namespace MusicWidget.NativeApp
 
         internal Border SelectionIndicator()
         {
-            var indicator = new CapsuleBorder
+            var indicator = new RaisedCapsule
             {
-                IsHitTestVisible = false, BorderBrush = PopupRim, BorderThickness = new Thickness(.7)
+                IsHitTestVisible = false, BorderBrush = Brushes.Transparent, BorderThickness = new Thickness(.7)
             };
             indicator.SetResourceReference(Border.BackgroundProperty, Selected);
             return indicator;
@@ -322,16 +324,22 @@ namespace MusicWidget.NativeApp
             return header;
         }
 
-        internal Border Popover(FrameworkElement child, int radius)
+        internal Border Popover(FrameworkElement child, int radius, bool embedded = false)
         {
-            var border = new Border
+            var border = new RaisedCard
             {
-                Child = child, Padding = new Thickness(6), CornerRadius = new CornerRadius(radius),
-                BorderBrush = PopupRim,
-                BorderThickness = new Thickness(1)
+                Child = child, Padding = new Thickness(6), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(radius)
             };
-            border.SetResourceReference(Border.BackgroundProperty, PopupMaterial);
+            border.SetResourceReference(Border.BackgroundProperty, embedded ? Rest : PopupMaterial);
             return border;
+        }
+
+        private sealed class RaisedCard : Border
+        {
+            protected override void OnRender(DrawingContext drawing)
+            {
+                ControlGlass.Draw(drawing, new Rect(RenderSize), CornerRadius.TopLeft, Background, edge: BorderBrush);
+            }
         }
 
         internal Border Flyout(FrameworkElement child, double radius, Thickness padding, bool volume = false)
@@ -347,10 +355,20 @@ namespace MusicWidget.NativeApp
 
         private sealed class FlyoutFrame : Border
         {
+            internal Brush Backdrop { get; set; }
+
             protected override void OnRender(DrawingContext drawing)
             {
-                GlassFrame.Draw(drawing, RenderSize, CornerRadius.TopLeft, Background, true);
+                GlassFrame.Draw(drawing, RenderSize, CornerRadius.TopLeft, Background, true, backdrop: Backdrop);
             }
+        }
+
+        internal static void SetFlyoutBackdrop(FrameworkElement surface, Brush backdrop)
+        {
+            var frame = surface as FlyoutFrame;
+            if (frame == null || frame.Backdrop == backdrop) return;
+            frame.Backdrop = backdrop;
+            frame.InvalidateVisual();
         }
 
         internal Button MenuRow(string label, string icon, Action action, bool child = false, string mark = null, Brush ink = null)
@@ -358,7 +376,7 @@ namespace MusicWidget.NativeApp
             bool selected = mark == "\u2713";
             if (selected) mark = null;
             var grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(icon != null || !String.IsNullOrEmpty(mark) ? 28 : 0) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(icon != null || !String.IsNullOrEmpty(mark) ? 24 : 0) });
             grid.ColumnDefinitions.Add(new ColumnDefinition());
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             if (icon != null)
@@ -381,7 +399,7 @@ namespace MusicWidget.NativeApp
             if (child || selected)
             {
                 var arrow = Glyph(selected ? "check" : "chevron", 12);
-                arrow.Margin = new Thickness(12, 0, 0, 0);
+                arrow.Margin = new Thickness(6, 0, 0, 0);
                 Grid.SetColumn(arrow, 2);
                 grid.Children.Add(arrow);
             }
@@ -400,7 +418,7 @@ namespace MusicWidget.NativeApp
         private Style CreateButtonStyle()
         {
             var style = new Style(typeof(Button));
-            var outer = new FrameworkElementFactory(typeof(CapsuleBorder), "Face");
+            var outer = new FrameworkElementFactory(typeof(RaisedCapsule), "Face");
             outer.SetValue(Border.BorderThicknessProperty, new Thickness(.7));
             outer.SetBinding(Border.BackgroundProperty, new Binding("Background") { RelativeSource = RelativeSource.TemplatedParent });
             outer.SetBinding(Border.BorderBrushProperty, new Binding("BorderBrush") { RelativeSource = RelativeSource.TemplatedParent });
@@ -424,7 +442,7 @@ namespace MusicWidget.NativeApp
             style.Setters.Add(new Setter(Control.TemplateProperty, template));
             style.Setters.Add(new Setter(FrameworkElement.MinHeightProperty, 36.0));
             style.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(14, 0, 14, 0)));
-            style.Setters.Add(new Setter(Control.BorderBrushProperty, Edge));
+            style.Setters.Add(new Setter(Control.BorderBrushProperty, Brushes.Transparent));
             style.Setters.Add(new Setter(Control.HorizontalContentAlignmentProperty, HorizontalAlignment.Center));
             style.Setters.Add(new Setter(FrameworkElement.FocusVisualStyleProperty, null));
             style.Setters.Add(new Setter(FrameworkElement.CursorProperty, Cursors.Hand));
@@ -435,8 +453,8 @@ namespace MusicWidget.NativeApp
         {
             var style = new Style(typeof(TextBox));
             var outer = new FrameworkElementFactory(typeof(CapsuleBorder), "FieldBorder");
-            outer.SetValue(Border.BackgroundProperty, InputBackground);
-            outer.SetValue(Border.BorderBrushProperty, InputRim);
+            outer.SetValue(Border.BackgroundProperty, ControlGlass.WellFill);
+            outer.SetValue(Border.BorderBrushProperty, ControlGlass.WellEdge);
             outer.SetValue(Border.BorderThicknessProperty, new Thickness(1));
             var layers = new FrameworkElementFactory(typeof(Grid));
             var watermark = new FrameworkElementFactory(typeof(TextBlock), "Watermark");

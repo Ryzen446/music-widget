@@ -186,8 +186,9 @@ namespace MusicWidget.NativeApp
                 FocusVisualStyle = null
             };
             var resizeFace = new FrameworkElementFactory(typeof(Border), "ResizeFace");
-            resizeFace.SetValue(Border.BackgroundProperty, Mini.Glass.Solid(Color.FromArgb(45, 255, 255, 255)));
-            resizeFace.SetValue(Border.BorderBrushProperty, Mini.Glass.Solid(Color.FromArgb(75, 255, 255, 255)));
+            resizeFace.SetResourceReference(Border.BackgroundProperty, GlassUi.Rest);
+            resizeFace.SetValue(Border.BorderBrushProperty, Mini.Glass.Gradient(Color.FromArgb(128, 255, 255, 255),
+                Color.FromArgb(53, 255, 255, 255), new Point(0, 0), new Point(.9, 1)));
             resizeFace.SetValue(Border.BorderThicknessProperty, new Thickness(.6));
             resizeFace.SetValue(Border.CornerRadiusProperty, new CornerRadius(6));
             var sizeGlyph = new FrameworkElementFactory(typeof(Path));
@@ -313,7 +314,7 @@ namespace MusicWidget.NativeApp
         private void ShowOptions(FrameworkElement anchor)
         {
             if (ToggleExistingFloater(anchor)) return;
-            var rows = new StackPanel { MinWidth = 196 };
+            var rows = new StackPanel { MinWidth = 220 };
             rows.Children.Add(Glass.MenuRow(T("appearance"), "settings", () => Navigate("settings"), true));
             rows.Children.Add(Glass.MenuRow(T("library"), "library", () => Navigate("library"), true));
             rows.Children.Add(Glass.MenuRow(T("next"), "next", () => { DismissFloater(false); Next(); }));

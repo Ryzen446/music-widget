@@ -26,13 +26,17 @@ Press **Ctrl+Shift+M** to show or hide the player. The Music Widget tray menu al
 
 ## Screenshots
 
+Captured from the native C# and WPF app with demo tracks and playlists.
+
 ### Player and Liquid Glass controls
 
-| Minimalist in different auras | Compact with audio visualizer |
+| Minimalist in six auras | Compact with audio visualizer |
 | --- | --- |
 | [![Minimalist music widget with several glass colors](docs/screenshots/minimalist-auras.webp)](docs/screenshots/minimalist-auras.webp) | [![Compact Windows music player with frequency bars and transport controls](docs/screenshots/compact.webp)](docs/screenshots/compact.webp) |
-| **Player menu** | **Volume** |
-| [![Liquid Glass dropdown with settings, library and playback actions](docs/screenshots/glass-menu.webp)](docs/screenshots/glass-menu.webp) | [![Minimalist player with its Liquid Glass volume slider open](docs/screenshots/volume.webp)](docs/screenshots/volume.webp) |
+| **Minimalist menu** | **Compact menu** |
+| [![Minimalist player menu with settings, library and playback actions](docs/screenshots/glass-menu.webp)](docs/screenshots/glass-menu.webp) | [![Compact player with its glass menu open over the playback controls](docs/screenshots/compact-menu.webp)](docs/screenshots/compact-menu.webp) |
+| **Volume popover** | **Compact in four auras** |
+| [![Minimalist player with its Liquid Glass volume slider open](docs/screenshots/volume.webp)](docs/screenshots/volume.webp) | [![Compact player in violet, blue, mint and amber](docs/screenshots/compact-auras.webp)](docs/screenshots/compact-auras.webp) |
 
 ### Library, playlists and search
 
@@ -41,8 +45,10 @@ Press **Ctrl+Shift+M** to show or hide the player. The Music Widget tray menu al
 | [![Searchable local audio library with playlist tabs and track actions](docs/screenshots/library.webp)](docs/screenshots/library.webp) | [![Playlist editor with track selection and a batch-add action](docs/screenshots/playlist-picker.webp)](docs/screenshots/playlist-picker.webp) |
 | **Search and preview** | **Add from a link or file** |
 | [![Music search results with thumbnails, play and download actions](docs/screenshots/search.webp)](docs/screenshots/search.webp) | [![Add Music link and file tab with a file picker and a URL field](docs/screenshots/add-music.webp)](docs/screenshots/add-music.webp) |
-| **Download progress** | |
-| [![Download with a Liquid Glass progress bar and byte totals](docs/screenshots/download.webp)](docs/screenshots/download.webp) | |
+| **Download progress** | **Download destination** |
+| [![Download with a Liquid Glass progress bar and byte totals](docs/screenshots/download.webp)](docs/screenshots/download.webp) | [![Choose a destination for a searched track](docs/screenshots/download-destination.webp)](docs/screenshots/download-destination.webp) |
+| **Track menu** | |
+| [![Library track menu with playlist actions](docs/screenshots/track-menu.webp)](docs/screenshots/track-menu.webp) | |
 
 ### Personalization and shortcuts
 
@@ -51,8 +57,6 @@ Press **Ctrl+Shift+M** to show or hide the player. The Music Widget tray menu al
 | [![Liquid Glass settings with a saturation field, hue slider and hexadecimal color](docs/screenshots/aura-picker.webp)](docs/screenshots/aura-picker.webp) | [![Minimalist position menu with six top and bottom desktop anchors](docs/screenshots/positions.webp)](docs/screenshots/positions.webp) |
 | **Global shortcuts** | **Windows tray menu** |
 | [![Customizable Windows keyboard shortcuts for the desktop music widget](docs/screenshots/shortcuts.webp)](docs/screenshots/shortcuts.webp) | [![Native Windows tray menu with show or hide, start with Windows, music folder and quit](docs/screenshots/tray.png)](docs/screenshots/tray.png) |
-
-Screenshots use demo tracks and library data.
 
 ## Optional online tools
 

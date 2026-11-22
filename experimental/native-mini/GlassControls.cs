@@ -118,12 +118,11 @@ namespace MusicWidget.NativeMini
 
     internal static class GlassFrame
     {
-        private static readonly Brush UpperLight = Glass.Gradient(Color.FromArgb(18, 255, 255, 255),
-            Colors.Transparent, new Point(0, 0), new Point(0, 1));
-        private static readonly Brush LeftLight = Glass.Gradient(Color.FromArgb(13, 255, 255, 255),
-            Colors.Transparent, new Point(0, 0), new Point(1, 0));
-        private static readonly Brush LowerLight = Glass.Gradient(Color.FromArgb(8, 236, 229, 255),
-            Colors.Transparent, new Point(0, 1), new Point(0, 0));
+        private static readonly Brush UpperLight = EdgeLight(Colors.White, 46, true, false);
+        private static readonly Brush LeftLight = EdgeLight(Colors.White, 32, false, false);
+        private static readonly Brush LowerLight = EdgeLight(Color.FromRgb(235, 229, 255), 21, true, true);
+        private static readonly Brush RightShade = EdgeLight(Color.FromRgb(12, 12, 22), 29, false, true);
+        private static readonly Brush Glint = ReflectedAura(Colors.White, 39, new Point(.24, 0), .47, .89);
         private static readonly Pen ClearRim = CreateRim(.18, .467);
 
         private static class Frosted
@@ -157,17 +156,56 @@ namespace MusicWidget.NativeMini
             return pen;
         }
 
-        internal static void Draw(DrawingContext dc, Size size, double radius, Brush material, bool frosted)
+        private static Brush EdgeLight(Color tint, byte brightness, bool vertical, bool reverse)
+        {
+            var brush = new LinearGradientBrush
+            {
+                StartPoint = vertical ? new Point(0, reverse ? 1 : 0) : new Point(reverse ? 1 : 0, 0),
+                EndPoint = vertical ? new Point(0, reverse ? 0 : 1) : new Point(reverse ? 0 : 1, 0),
+                GradientStops = new GradientStopCollection
+                {
+                    new GradientStop(Glass.Alpha(tint, brightness), 0),
+                    new GradientStop(Glass.Alpha(tint, (byte)(brightness * .64)), .16),
+                    new GradientStop(Glass.Alpha(tint, (byte)(brightness * .26)), .39),
+                    new GradientStop(Glass.Alpha(tint, 0), 1)
+                }
+            };
+            brush.Freeze();
+            return brush;
+        }
+
+        internal static Brush ReflectedAura(Color tint, byte brightness, Point center, double width, double height)
+        {
+            var brush = new RadialGradientBrush
+            {
+                Center = center, GradientOrigin = center, RadiusX = width, RadiusY = height,
+                GradientStops = new GradientStopCollection
+                {
+                    new GradientStop(Glass.Alpha(tint, brightness), 0),
+                    new GradientStop(Glass.Alpha(tint, (byte)(brightness * .43)), .43),
+                    new GradientStop(Glass.Alpha(tint, 0), 1)
+                }
+            };
+            brush.Freeze();
+            return brush;
+        }
+
+        internal static void Draw(DrawingContext dc, Size size, double radius, Brush material, bool frosted,
+            Brush backdrop = null, Brush auraReflection = null)
         {
             var bounds = new Rect(size);
             if (bounds.Width <= 1 || bounds.Height <= 1) return;
             radius = Math.Min(radius, Math.Min(bounds.Width, bounds.Height) / 2);
+            if (backdrop != null) dc.DrawRoundedRectangle(backdrop, null, bounds, radius, radius);
             dc.DrawRoundedRectangle(material, null, bounds, radius, radius);
             dc.PushClip(new RectangleGeometry(bounds, radius, radius));
-            double band = Math.Min(frosted ? 13 : 10, Math.Min(bounds.Width, bounds.Height) / 2);
+            double band = Math.Min(frosted ? 18 : 22, Math.Min(bounds.Width, bounds.Height) / 2);
+            if (auraReflection != null) dc.DrawRectangle(auraReflection, null, bounds);
+            dc.DrawRectangle(RightShade, null, new Rect(bounds.Width - band, 0, band, bounds.Height));
+            dc.DrawRectangle(LowerLight, null, new Rect(0, bounds.Height - band, bounds.Width, band));
             dc.DrawRectangle(UpperLight, null, new Rect(0, 0, bounds.Width, band));
             dc.DrawRectangle(LeftLight, null, new Rect(0, 0, band, bounds.Height));
-            dc.DrawRectangle(LowerLight, null, new Rect(0, bounds.Height - band, bounds.Width, band));
+            dc.DrawRectangle(Glint, null, new Rect(0, 0, bounds.Width, band * .46));
             dc.Pop();
             var edge = new Rect(.5, .5, bounds.Width - 1, bounds.Height - 1);
             double edgeRadius = Math.Max(0, radius - .5);
@@ -182,6 +220,7 @@ namespace MusicWidget.NativeMini
             new FrameworkPropertyMetadata(Rect.Empty, FrameworkPropertyMetadataOptions.AffectsRender));
         private readonly Brush fallback;
         private Brush tint;
+        private Brush auraReflection;
         private bool useBackdrop;
         private double radius;
 
@@ -208,7 +247,9 @@ namespace MusicWidget.NativeMini
 
         internal void SetAura(Color aura)
         {
+            // Clear surface (22% times its .65 opacity) from the WebView material.
             tint = Glass.Solid(Glass.Alpha(aura, 36));
+            auraReflection = GlassFrame.ReflectedAura(aura, 26, new Point(.85, .015), .76, .31);
             InvalidateVisual();
         }
 
@@ -218,8 +259,88 @@ namespace MusicWidget.NativeMini
             var size = animated.IsEmpty ? RenderSize : animated.Size;
             if (!animated.IsEmpty) drawing.PushTransform(new TranslateTransform(animated.X, animated.Y));
             if (!useBackdrop) drawing.DrawRoundedRectangle(fallback, null, new Rect(size), radius, radius);
-            GlassFrame.Draw(drawing, size, radius, tint, false);
+            GlassFrame.Draw(drawing, size, radius, tint, false, auraReflection: auraReflection);
             if (!animated.IsEmpty) drawing.Pop();
+        }
+    }
+
+    internal static class ControlGlass
+    {
+        internal static readonly Brush WellFill = Vertical(
+            Glass.Alpha(Colors.Black, 103), Glass.Alpha(Colors.Black, 58), .2);
+        internal static readonly Brush WellEdge = Vertical(
+            Glass.Alpha(Colors.Black, 86), Glass.Alpha(Colors.White, 35), .82);
+        private static readonly Brush Rise = Vertical(Glass.Alpha(Colors.Black, 0), Glass.Alpha(Colors.Black, 43), .9);
+        private static readonly Brush Bloom = Vertical(Glass.Alpha(Colors.White, 27), Glass.Alpha(Colors.White, 0), .38);
+        private static readonly Brush CounterBloom = Glass.Gradient(Glass.Alpha(Colors.White, 12),
+            Glass.Alpha(Colors.White, 0), new Point(0, 1), new Point(0, .81));
+        private static readonly Pen RoundRim = Rim(1);
+        private static readonly Pen CapsuleRim = Rim(7.5);
+        private static readonly Pen KeyRim = Stroke(Glass.InkBrush, 1);
+
+        internal static Brush Fill(Color aura, bool selected = false)
+        {
+            // Shared aura wash with the same premultiplied blend as the web controls.
+            var tint = Glass.Mix(aura, Glass.Alpha(Colors.White, selected ? (byte)46 : (byte)27), .09);
+            return Glass.Solid(tint);
+        }
+
+        private static Brush Vertical(Color top, Color bottom, double extent)
+        {
+            return Glass.Gradient(top, bottom, new Point(0, 0), new Point(0, extent));
+        }
+
+        private static Pen Stroke(Brush brush, double thickness)
+        {
+            var pen = new Pen(brush, thickness);
+            if (brush.IsFrozen) pen.Freeze();
+            return pen;
+        }
+
+        private static Pen Rim(double horizontalScale)
+        {
+            // The conic ring from Open Glass UI: a quiet continuous edge, a
+            // brighter reflection at upper left and a weaker opposite reflection.
+            const int side = 73;
+            const double center = (side - 1) / 2.0;
+            var pixels = new byte[side * side * 4];
+            for (int y = 0; y < side; ++y)
+            for (int x = 0; x < side; ++x)
+            {
+                double angle = Math.Atan2(y - center, (x - center) * horizontalScale) * 180 / Math.PI;
+                double light = Math.Max(0, 1 - Math.Abs(angle + 135) / 45);
+                double counter = Math.Max(0, 1 - Math.Abs(angle - 45) / 45);
+                int offset = (y * side + x) * 4;
+                pixels[offset] = pixels[offset + 1] = pixels[offset + 2] = 255;
+                pixels[offset + 3] = (byte)Math.Round(49 + 180 * light + 58 * counter);
+            }
+            var bitmap = BitmapSource.Create(side, side, 96, 96, PixelFormats.Bgra32, null, pixels, side * 4);
+            bitmap.Freeze();
+            var brush = new ImageBrush(bitmap) { Stretch = Stretch.Fill };
+            brush.Freeze();
+            return Stroke(brush, 1);
+        }
+
+        internal static void Draw(DrawingContext dc, Rect bounds, double radius, Brush fill, bool focused = false,
+            bool lift = true, Brush edge = null)
+        {
+            if (bounds.Width <= 1 || bounds.Height <= 1) return;
+            radius = Math.Min(radius, Math.Min(bounds.Width, bounds.Height) / 2);
+            if (lift)
+            {
+                var shadow = bounds;
+                shadow.Offset(0, 2.2);
+                dc.DrawRoundedRectangle(Rise, null, shadow, radius, radius);
+            }
+            dc.DrawRoundedRectangle(fill, null, bounds, radius, radius);
+            dc.DrawRoundedRectangle(Bloom, null, bounds, radius, radius);
+            dc.DrawRoundedRectangle(CounterBloom, null, bounds, radius, radius);
+            var rim = bounds;
+            rim.Inflate(-.5, -.5);
+            double innerRadius = Math.Max(0, radius - .5);
+            var stroke = focused ? KeyRim : edge != null ? Stroke(edge, 1) :
+                bounds.Width > bounds.Height * 1.25 ? CapsuleRim : RoundRim;
+            dc.DrawRoundedRectangle(null, stroke, rim, innerRadius, innerRadius);
         }
     }
 
@@ -396,7 +517,6 @@ namespace MusicWidget.NativeMini
         private static readonly ControlTemplate ButtonTemplate = Glass.EmptyTemplate(typeof(Button));
         private static readonly Dictionary<string, Geometry> Icons = DefineIcons();
         private Brush restingFill;
-        private readonly Pen rim;
         private readonly Pen glyphStroke;
         private readonly double glyphSize;
         private string glyph;
@@ -412,9 +532,6 @@ namespace MusicWidget.NativeMini
             Style = null;
             FocusVisualStyle = null;
             SetAura(aura);
-            rim = new Pen(Glass.Gradient(Color.FromArgb(194, 255, 255, 255),
-                Color.FromArgb(54, 255, 255, 255), new Point(0.1, 0.05), new Point(0.85, 1)), 0.72);
-            rim.Freeze();
             glyphStroke = GlyphPen(Glass.InkBrush);
             IsKeyboardFocusedChanged += (sender, args) => InvalidateVisual();
         }
@@ -444,9 +561,7 @@ namespace MusicWidget.NativeMini
 
         internal void SetAura(Color aura)
         {
-            Color rest = Glass.Alpha(Glass.Mix(aura, Color.FromRgb(218, 230, 255), 0.40), 62);
-            restingFill = Glass.Gradient(Glass.Mix(Glass.Alpha(Colors.White, 96), rest, 0.35),
-                rest, new Point(0.15, 0.02), new Point(0.83, 0.95));
+            restingFill = ControlGlass.Fill(aura);
             SetValue(HoverBrushProperty, Glass.Solid(Glass.Alpha(Glass.Mix(aura, Colors.White, .65), 27)));
             SetValue(PressBrushProperty, Glass.Solid(Glass.Alpha(Glass.Mix(aura, Colors.White, .45), 25)));
             InvalidateVisual();
@@ -500,11 +615,9 @@ namespace MusicWidget.NativeMini
             if (r <= 0) return;
             drawing.PushOpacity(IsEnabled ? 1 : 0.45);
             var ink = Glass.InkBrush;
-            drawing.DrawEllipse(restingFill, rim, center, r, r);
             var bounds = new Rect(center.X - r, center.Y - r, r * 2, r * 2);
+            ControlGlass.Draw(drawing, bounds, r, restingFill, IsKeyboardFocused && Glass.ShowKeyboardFocus(this));
             DrawInteraction(drawing, bounds, r);
-            if (IsKeyboardFocused && Glass.ShowKeyboardFocus(this))
-                drawing.DrawEllipse(null, new Pen(ink, .8), center, r - 1.45, r - 1.45);
             if (swatchFill != null)
             {
                 drawing.DrawEllipse(swatchFill, null, center, 9, 9);
@@ -549,9 +662,7 @@ namespace MusicWidget.NativeMini
             Colors.Transparent, new Point(0, 0), new Point(0, 0.7));
         private static readonly Brush ProgressInset = Glass.Gradient(Color.FromArgb(184, 255, 255, 255),
             Color.FromArgb(0, 255, 255, 255), new Point(0, 0), new Point(0, 0.45));
-        private static readonly Brush Knob = Glass.Gradient(Color.FromArgb(140, 255, 255, 255),
-            Color.FromArgb(77, 255, 255, 255), new Point(0, 0), new Point(1, 1));
-        private static readonly Pen KnobEdge = CreateKnobEdge();
+        internal static readonly Brush Knob = CreateKnob();
         private static readonly Brush SliderFill = Glass.Gradient(Color.FromArgb(170, 240, 248, 255),
             Color.FromArgb(139, 224, 231, 244), new Point(0, 0), new Point(0, 1));
         private Brush fill;
@@ -595,12 +706,20 @@ namespace MusicWidget.NativeMini
             InvalidateVisual();
         }
 
-        private static Pen CreateKnobEdge()
+        private static Brush CreateKnob()
         {
-            var pen = new Pen(Glass.Gradient(Color.FromArgb(217, 255, 255, 255),
-                Color.FromArgb(106, 255, 255, 255), new Point(0, 0), new Point(0, 1)), 1);
-            pen.Freeze();
-            return pen;
+            var fill = new LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0), EndPoint = new Point(.18, 1),
+                GradientStops = new GradientStopCollection
+                {
+                    new GradientStop(Glass.Alpha(Colors.White, 140), 0),
+                    new GradientStop(Glass.Alpha(Colors.White, 38), .48),
+                    new GradientStop(Glass.Alpha(Colors.White, 77), 1)
+                }
+            };
+            fill.Freeze();
+            return fill;
         }
 
         internal void StopProgressAnimation()
@@ -640,7 +759,8 @@ namespace MusicWidget.NativeMini
             double fraction = VisualFraction(progress ? displayed : Value);
             double inset = progress ? 0 : Math.Min(14, size / 2);
             double filled = Math.Max(0, size - 2 * inset) * fraction;
-            drawing.DrawRoundedRectangle(Rail, null, new Rect(0, top, size, 4), progress ? 0 : 2, 2);
+            drawing.DrawRoundedRectangle(progress ? Rail : ControlGlass.WellFill, null,
+                new Rect(0, top, size, 4), progress ? 0 : 2, 2);
             if (progress)
                 drawing.DrawRectangle(RailInset, null, new Rect(0, top, size, 4));
             double fillWidth = progress ? filled : filled + inset;
@@ -656,7 +776,7 @@ namespace MusicWidget.NativeMini
             {
                 double lens = Math.Max(0, (double)GetValue(LensProperty));
                 var thumb = Glass.LensBounds(new Rect(filled, top - 6.5, 2 * inset, 17), lens, .3, .45);
-                drawing.DrawRoundedRectangle(IsMouseCaptured ? Glass.HeldLens : Knob, KnobEdge, thumb, thumb.Height / 2, thumb.Height / 2);
+                ControlGlass.Draw(drawing, thumb, thumb.Height / 2, IsMouseCaptured ? Glass.HeldLens : Knob, lift: false);
             }
         }
 
