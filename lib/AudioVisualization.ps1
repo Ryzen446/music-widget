@@ -14,7 +14,8 @@ function Initialize-AudioVisualization {
             Add-Type -Path $sources
         }
         $script:AudioVisualizationSampler = [MusicWidget.Visualization.SessionAudioVisualizer]::new([int]$PID)
-        $executable = Join-Path (Split-Path -Parent $script:AudioVisualizationRoot) 'bin\ffmpeg.exe'
+        $bin = if ($script:OnlineToolsDirectory) { $script:OnlineToolsDirectory } else { Join-Path (Split-Path -Parent $script:AudioVisualizationRoot) 'bin' }
+        $executable = Join-Path $bin 'ffmpeg.exe'
         $script:AudioTrackSpectrum = [MusicWidget.Visualization.TrackSpectrumReader]::new($executable)
         return $true
     } catch {

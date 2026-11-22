@@ -9,6 +9,7 @@ param([switch]$Remove)
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LauncherVbs = Join-Path $ScriptDir 'Lancer-Widget.vbs'
+$LauncherExe = Join-Path $ScriptDir 'MusicWidget.exe'
 $IconPath = Join-Path $ScriptDir 'assets\music_widget_glass.ico'
 if (-not (Test-Path $IconPath)) { $IconPath = Join-Path $ScriptDir 'assets\icon.ico' }
 $StartupFolder = [Environment]::GetFolderPath('Startup')
@@ -26,8 +27,13 @@ if ($Remove) {
 
 $WshShell = New-Object -ComObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
-$Shortcut.TargetPath = "$env:SystemRoot\System32\wscript.exe"
-$Shortcut.Arguments = "`"$LauncherVbs`""
+if (Test-Path -LiteralPath $LauncherExe -PathType Leaf) {
+    $Shortcut.TargetPath = $LauncherExe
+    $Shortcut.Arguments = ''
+} else {
+    $Shortcut.TargetPath = "$env:SystemRoot\System32\wscript.exe"
+    $Shortcut.Arguments = "`"$LauncherVbs`""
+}
 $Shortcut.WorkingDirectory = $ScriptDir
 $Shortcut.Description = 'Music Widget - Liquid Glass'
 if (Test-Path $IconPath) {

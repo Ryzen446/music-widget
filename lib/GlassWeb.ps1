@@ -216,9 +216,9 @@ function ConvertFrom-GlassWebCommand([string]$Json) {
         if (-not (Test-GlassWebNumber $message.id 0 9007199254740991) -or [math]::Floor([double]$message.id) -ne [double]$message.id) { return $null }
     }
     if (-not (Test-GlassWebNumber $message.v 1 1) -or $message.command -isnot [string]) { return $null }
-    if ($message.command -cnotin @('togglePlay','next','prev','mute','importLocal','hide','ready','presentationReady','drag','seek','seekRelative','volume','shuffle','topmost','motion','repeat','design','theme','placement','speed','sleep','pane','selectTrack','deleteTrack','selectPlaylist','deletePlaylist','createPlaylist','addToPlaylist','removeFromPlaylist','addPlaylistTracks','download','search','previewTrack','previewMedia','moveTrack','resize','auraColor','auraMode','shape','language','shortcutCapture','shortcutSet')) { return $null }
+    if ($message.command -cnotin @('togglePlay','next','prev','mute','importLocal','hide','ready','presentationReady','drag','seek','seekRelative','volume','shuffle','topmost','motion','repeat','design','theme','placement','speed','sleep','pane','selectTrack','deleteTrack','selectPlaylist','deletePlaylist','createPlaylist','addToPlaylist','removeFromPlaylist','addPlaylistTracks','download','search','previewTrack','previewMedia','moveTrack','resize','auraColor','auraMode','shape','language','shortcutCapture','shortcutSet','enableOnlineTools')) { return $null }
     $valid = switch -CaseSensitive ($message.command) {
-        { $_ -in @('togglePlay','next','prev','mute','importLocal','hide','ready','drag') } { $true; break }
+        { $_ -in @('togglePlay','next','prev','mute','importLocal','hide','ready','drag','enableOnlineTools') } { $true; break }
         'presentationReady' {
             $message.value -is [PSCustomObject] -and @($message.value.PSObject.Properties.Name | Where-Object {$_ -cnotin @('target','generation')}).Count -eq 0 -and
             $message.value.target -ceq 'main' -and (Test-GlassWebNumber $message.value.generation 1 9007199254740991) -and
@@ -401,6 +401,9 @@ function Invoke-GlassWebCommand {
         'deleteTrack' { $script:PendingDeleteIndex=[int]$validated.index; Confirm-DeleteTrack; Set-GlassWebPane 'library' }
         'deletePlaylist' { Delete-CustomPlaylist -Name ([string]$validated.name) }
         'importLocal' { $BtnChoiceLocal.RaiseEvent([System.Windows.RoutedEventArgs]::new([System.Windows.Controls.Button]::ClickEvent)) }
+        'enableOnlineTools' {
+            if ($script:GlassWebPane -in @('search','import')) { Start-OnlineToolsInstall }
+        }
         'download' {
             if ($script:GlassWebDownloadBusy) { throw (T 'downloadAlreadyRunning') }
             $TxtUrlInput.Text=[string]$validated.url
@@ -660,6 +663,11 @@ function Publish-GlassWebState {
             download=[ordered]@{busy=[bool]$script:GlassWebDownloadBusy;succeeded=$script:DownloadSucceeded;status=$downloadStatus;error=$downloadError;received=$downloadReceived;total=$downloadTotal}
             error=$presentationError
         }
+        $onlineToolsKey = ''
+        if ($script:GlassWebPane -in @('search','import')) {
+            $state.onlineTools = Get-OnlineToolsState
+            $onlineToolsKey = $state.onlineTools.Values -join ','
+        }
         # Only serialize when visible playback data or one of the lists changes.
         $previewKey=if ($script:GlassWebPane -eq 'search') {@($script:TrackPreview.id,$script:TrackPreview.phase,$script:TrackPreview.error,$script:TrackPreview.generation,[bool]$script:TrackPreview.url) -join [char]0} else {''}
         $shortcutKey=''
@@ -671,7 +679,7 @@ function Publish-GlassWebState {
                 "$($binding.modifiers):$($binding.key):$($script:ShortcutInactive.Contains($action))"
             }) -join '|')
         }
-        $stateKey=(@($state.Values) + @($downloadStatus,$downloadError,$script:GlassWebDownloadBusy,$script:DownloadSucceeded,$downloadReceived,$downloadTotal,$previewKey,$shortcutKey)) -join [char]0
+        $stateKey=(@($state.Values) + @($downloadStatus,$downloadError,$script:GlassWebDownloadBusy,$script:DownloadSucceeded,$downloadReceived,$downloadTotal,$previewKey,$shortcutKey,$onlineToolsKey)) -join [char]0
         $includeLibrary=$script:GlassWebPane -in @('library','createPlaylist','playlistTracks','import','delete')
         $libraryFiles=if ($script:GlassWebPane -eq 'playlistTracks') {,$script:LibraryFiles} else {,$script:Playlist}
         $libraryKey=([System.Runtime.CompilerServices.RuntimeHelpers]::GetHashCode([object]$libraryFiles)).ToString()+'/'+$libraryFiles.Count+'/'+$script:ActivePlaylist+'/'+$script:GlassWebPane

@@ -6,7 +6,8 @@
 # Start-MusicDownload flow, using the canonical URL of a selected result.
 if ($null -eq $script:Translations) {. (Join-Path $PSScriptRoot 'I18n.ps1')}
 $script:TrackSearchRoot = $PSScriptRoot
-$script:TrackSearchExecutable = Join-Path (Split-Path -Parent $PSScriptRoot) 'bin\yt-dlp.exe'
+$searchBin = if ($script:OnlineToolsDirectory) { $script:OnlineToolsDirectory } else { Join-Path (Split-Path -Parent $PSScriptRoot) 'bin' }
+$script:TrackSearchExecutable = Join-Path $searchBin 'yt-dlp.exe'
 $script:TrackSearchRequest = $null
 $script:TrackSearchGeneration = 0
 $script:TrackSearchActiveGeneration = 0

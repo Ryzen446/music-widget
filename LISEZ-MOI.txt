@@ -1,32 +1,37 @@
-Music Widget 5.5 · Liquid Glass for Windows
+Music Widget · Liquid Glass for Windows
 Project: https://github.com/Ryzen446/music-widget
 
 ENGLISH
-1. Extract all files to a folder you can write to.
-2. Open Lancer-Widget.vbs.
-3. Use the three-dot menu and select Add music → Link or file to import audio.
+Open Music Widget from the Start menu after installing MusicWidget-Setup.exe.
+For the portable ZIP, extract all files to a folder you can write to, then
+open MusicWidget.exe.
+
+Use the three-dot menu and select Add music → Link or file to import audio.
 
 Press Ctrl+Shift+M to show or hide the player. Right-click the Music Widget
 icon by the Windows clock to open the music folder, enable startup or quit.
 
-Liquid Glass uses the Microsoft Edge WebView2 Runtime. If needed, download
-the Evergreen Runtime from https://developer.microsoft.com/microsoft-edge/webview2/
+Music Widget uses the native Windows WPF interface and .NET Framework 4.8.
+The installer checks for the framework before continuing.
 
-To enable online search, previews and downloads, see the project's README.
-Local audio and playlists work with this package as extracted.
+Choose Enable online tools on the Add music page to set up search, previews
+and downloads. Local audio and playlists are ready immediately.
 
 FRANÇAIS
-1. Décompresse tous les fichiers dans un dossier où tu peux écrire.
-2. Ouvre Lancer-Widget.vbs.
-3. Dans le menu à trois points, choisis Ajouter de la musique → Lien ou fichier.
+Après l’installation de MusicWidget-Setup.exe, ouvre Music Widget depuis le
+menu Démarrer. Pour le ZIP portable, décompresse tous les fichiers dans un
+dossier où tu peux écrire, puis ouvre MusicWidget.exe.
+
+Dans le menu à trois points, choisis Ajouter de la musique → Lien ou fichier.
 
 Ctrl+Maj+M affiche ou masque le lecteur. Un clic droit sur l’icône près de
 l’horloge permet d’ouvrir le dossier musique, de régler le démarrage ou de quitter.
 
-L’interface Liquid Glass utilise le runtime Microsoft Edge WebView2. Si besoin,
-télécharge le runtime Evergreen sur https://developer.microsoft.com/microsoft-edge/webview2/
+Music Widget utilise l’interface native Windows WPF et .NET Framework 4.8.
+L’installateur vérifie la présence de .NET Framework avant de continuer.
 
-Le README explique comment activer la recherche, l’écoute en ligne et les
-téléchargements. La lecture et les playlists locales fonctionnent directement.
+Pour configurer la recherche, l’écoute en ligne et les téléchargements,
+choisis Activer les outils en ligne dans Ajouter de la musique.
+La lecture et les playlists locales fonctionnent dès le premier lancement.
 
-Code: MIT. Licences des dépendances: frontend/licenses et lib/webview2.
+Code sous licence MIT. Consulte le fichier LICENSE.

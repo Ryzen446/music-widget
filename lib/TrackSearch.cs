@@ -91,6 +91,12 @@ public static class TrackSearch
         return escaped.ToString();
     }
 
+    internal static string BundledRuntimeArguments(string executable)
+    {
+        string deno = Path.Combine(Path.GetDirectoryName(executable), "deno.exe");
+        return File.Exists(deno) ? "--js-runtimes " + QuoteWindowsArgument("deno:" + deno) + " " : "";
+    }
+
     public static string BuildArguments(string query, int page, int pageSize)
     {
         query = NormalizeQuery(query); ValidatePage(page, pageSize);
@@ -239,7 +245,8 @@ public sealed class TrackPreviewProcess : IDisposable
         try
         {
             if (Volatile.Read(ref disposed) != 0) return null;
-            var start = new ProcessStartInfo(executable, String.Join(" ", Array.ConvertAll(arguments, TrackSearch.QuoteWindowsArgument))) {
+            var start = new ProcessStartInfo(executable, TrackSearch.BundledRuntimeArguments(executable) +
+                String.Join(" ", Array.ConvertAll(arguments, TrackSearch.QuoteWindowsArgument))) {
                 WorkingDirectory = Path.GetDirectoryName(executable), CreateNoWindow = true,
                 UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true
             };
@@ -307,7 +314,8 @@ public sealed class TrackSearchRequest : IDisposable
             if (IsCancelled) { result.Cancelled = true; return result; }
             if (!File.Exists(executable)) { result.Error = "searchToolMissing"; return result; }
             ProcessStartInfo start = new ProcessStartInfo();
-            start.FileName = executable; start.Arguments = TrackSearch.BuildArguments(query, page, pageSize);
+            start.FileName = executable;
+            start.Arguments = TrackSearch.BundledRuntimeArguments(executable) + TrackSearch.BuildArguments(query, page, pageSize);
             start.WorkingDirectory = Path.GetDirectoryName(executable);
             start.UseShellExecute = false; start.CreateNoWindow = true; start.WindowStyle = ProcessWindowStyle.Hidden;
             start.RedirectStandardOutput = true; start.RedirectStandardError = true;

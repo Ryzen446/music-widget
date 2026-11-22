@@ -9,7 +9,7 @@
 .PARAMETER NoRun
     Initialise les contrôles sans lancer la boucle de fenêtre (tests isolés).
 .PARAMETER DataDirectory
-    Dossier alternatif pour les réglages, playlists et fichiers audio.
+    Dossier alternatif pour les réglages, playlists, fichiers audio et outils.
 #>
 
 param([switch]$NoRun, [string]$DataDirectory = '')
@@ -25,8 +25,7 @@ $dataRoot = if ([string]::IsNullOrWhiteSpace($DataDirectory)) { $ScriptDir } els
 if (-not (Test-Path -LiteralPath $dataRoot)) { [void][IO.Directory]::CreateDirectory($dataRoot) }
 $legacyMusicDir = Join-Path (Split-Path -Parent $ScriptDir) 'musique'
 $script:MusicDir = if ([string]::IsNullOrWhiteSpace($DataDirectory) -and (Test-Path -LiteralPath $legacyMusicDir)) { $legacyMusicDir } else { Join-Path $dataRoot 'musique' }
-$binDir = Join-Path $ScriptDir 'bin'
-$ytdlpExe = Join-Path $binDir 'yt-dlp.exe'
+$script:OnlineToolsDirectory = Join-Path $dataRoot 'bin'
 # One instance; never terminate another player while it is saving settings.
 if (-not $NoRun) {
     $createdNew = $false
@@ -46,6 +45,7 @@ Add-Type -AssemblyName System.Drawing
 
 . (Join-Path $LibDir 'I18n.ps1')
 . (Join-Path $LibDir 'Shortcuts.ps1')
+. (Join-Path $LibDir 'OnlineTools.ps1')
 
 # --- Compile Windows CoreAudio WASAPI Peak Meter for Real-Time Sound Waves ---
 $audioMeterCs = @"
@@ -1143,8 +1143,7 @@ function Start-MusicDownload {
     Set-WidgetDownloadStatus 'downloadStarting'
     $TxtUploadStatus.Foreground = $bc.ConvertFromString("#A1A1AA")
 
-    $binDir = Join-Path $ScriptDir 'bin'
-    $ytdlpExe = Join-Path $binDir 'yt-dlp.exe'
+    $ytdlpExe = Join-Path $script:OnlineToolsDirectory 'yt-dlp.exe'
     $outDir = $script:MusicDir
 
     # Crash-proof native C# asynchronous background task
@@ -1999,6 +1998,7 @@ $liveTimer.Add_Tick({
 $window.Add_Closed({
     Save-AppSettings -Flush
     $liveTimer.Stop(); $progressTimer.Stop(); $saveTimer.Stop()
+    Stop-OnlineToolsMonitor
     if ($null -ne $script:HotKeyMgr) {
         $script:HotKeyMgr.Dispose()
     }

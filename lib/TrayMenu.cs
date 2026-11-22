@@ -13,7 +13,11 @@ public sealed class MusicWidgetTrayMenu : ToolStripDropDown
     internal Image TitleImage { get { return titleImage; } }
     private bool sizing;
 
-    public MusicWidgetTrayMenu(string imagePath)
+    public MusicWidgetTrayMenu(string imagePath) : this(LoadIcon(imagePath))
+    {
+    }
+
+    public MusicWidgetTrayMenu(Image image)
     {
         Font = menuFont;
         BackColor = MusicWidgetTrayRenderer.Surface;
@@ -24,15 +28,15 @@ public sealed class MusicWidgetTrayMenu : ToolStripDropDown
         DropShadowEnabled = true;
         AutoSize = false;
         Padding = new Padding(5);
-        if (System.IO.File.Exists(imagePath))
+        if (image != null)
         {
-            using (Image source = Image.FromFile(imagePath))
+            using (image)
             {
                 titleImage = new Bitmap(32, 32);
                 using (Graphics graphics = Graphics.FromImage(titleImage))
                 {
                     graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                    graphics.DrawImage(source, new Rectangle(0, 0, 32, 32));
+                    graphics.DrawImage(image, new Rectangle(0, 0, 32, 32));
                 }
             }
         }
@@ -47,6 +51,11 @@ public sealed class MusicWidgetTrayMenu : ToolStripDropDown
         title.Size = new Size(194, 30);
         Items.Add(title);
         Items.Add(new ToolStripSeparator());
+    }
+
+    private static Image LoadIcon(string path)
+    {
+        return System.IO.File.Exists(path) ? Image.FromFile(path) : null;
     }
 
     public void RefreshLayout()
@@ -89,6 +98,16 @@ public sealed class MusicWidgetTrayMenu : ToolStripDropDown
     {
         RefreshLayout();
         base.OnOpening(e);
+    }
+
+    protected override void WndProc(ref Message message)
+    {
+        const int activate = 0x0006;
+        const int cancelMode = 0x001F;
+        bool dismiss = message.Msg == cancelMode ||
+            (message.Msg == activate && (message.WParam.ToInt64() & 0xffff) == 0);
+        base.WndProc(ref message);
+        if (dismiss && Visible) Close(ToolStripDropDownCloseReason.AppFocusChange);
     }
 
     protected override void OnHandleCreated(EventArgs e)

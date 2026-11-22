@@ -467,7 +467,10 @@ function AddMusic({ state, send }: { state: PlayerState; send: Send }) {
   return <GlassSurface className="pane add-music-pane">
     <PaneHeader title={t('addMusic')} send={send} backTo="library" />
     <Tabs label={t('musicSources')} className="add-music-tabs" value={tab} onValueChange={value => send({ command: 'pane', value })} items={[
-      { value: 'search', label: <><Icon name="search" size={15} />{t('search')}</>, content: <OnlineSearch state={state} send={send} query={query} onQueryChange={setQuery} onDownload={startDownload} /> },
+      { value: 'search', label: <><Icon name="search" size={15} />{t('search')}</>, content: <>
+        <OnlineToolsSetup tools={state.onlineTools} send={send} />
+        {state.onlineTools.available && <OnlineSearch state={state} send={send} query={query} onQueryChange={setQuery} onDownload={startDownload} />}
+      </> },
       { value: 'import', label: <><Icon name="link" size={15} />{t('linkOrFile')}</>, content: <ImportMusic state={state} send={send} url={url} onUrlChange={setUrl} onDownload={startDownload} /> },
     ]} />
     <DownloadFeedback download={state.download} language={state.language} />
@@ -504,15 +507,29 @@ function AddMusic({ state, send }: { state: PlayerState; send: Send }) {
   </GlassSurface>;
 }
 
+function OnlineToolsSetup({ tools, send }: { tools: PlayerState['onlineTools']; send: Send }) {
+  const t = useStrings();
+  if (tools.complete || (tools.available && !tools.canInstall)) return null;
+  return <GlassSurface className="online-tools-setup">
+    {tools.installing ? <p role="status">{t('installingOnlineTools')}</p> : <>
+      <p>{t(tools.canInstall ? 'onlineToolsSetupHint' : 'onlineToolsUnavailable')}</p>
+      {tools.failed && <p role="alert">{t('onlineToolsInstallFailed')}</p>}
+      {tools.canInstall && <Button variant="secondary" leadingIcon={<Icon name="download" size={16} />}
+        onClick={() => send({ command: 'enableOnlineTools' })}>{t('enableOnlineTools')}</Button>}
+    </>}
+  </GlassSurface>;
+}
+
 function ImportMusic({ state, send, url, onUrlChange, onDownload }: { state: PlayerState; send: Send; url: string; onUrlChange: (url: string) => void; onDownload: (url: string) => void }) {
   const t = useStrings();
   return <div className="import-pane">
     <Button className="import-local" variant="secondary" leadingIcon={<Icon name="upload" size={21} />} onClick={() => send({ command: 'importLocal' })}><span>{t('pickFiles')}<small>MP3, WAV, FLAC, M4A…</small></span></Button>
     <div className="separator-label"><span />{t('orFromLink')}<span /></div>
-    <form noValidate onSubmit={event => { event.preventDefault(); if (url.trim()) onDownload(url.trim()); }}>
+    <OnlineToolsSetup tools={state.onlineTools} send={send} />
+    {state.onlineTools.available && <form noValidate onSubmit={event => { event.preventDefault(); if (url.trim()) onDownload(url.trim()); }}>
       <TextField label={t('youtubeSpotifyLink')} placeholder="https://…" value={url} onChange={event => onUrlChange(event.currentTarget.value)} type="url" required />
       <Button className="download-button" variant="secondary" type="submit" disabled={state.download.busy || !url.trim()} leadingIcon={<Icon name="link" />}>{state.download.busy ? t('adding') : t('addToLibrary')}</Button>
-    </form>
+    </form>}
   </div>;
 }
 

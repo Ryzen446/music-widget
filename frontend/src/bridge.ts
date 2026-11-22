@@ -27,6 +27,7 @@ export type PlayerState = {
   speed: number; sleepMinutes: number; pane: Pane; activePlaylist: string; currentIndex: number;
   library: Track[]; playlists: Playlist[];
   download: { busy: boolean; succeeded: boolean; status: string; error: string; received: number; total: number }; error?: string;
+  onlineTools: { available: boolean; complete: boolean; installing: boolean; failed: boolean; canInstall: boolean };
   presentationGeneration: number; interactive: boolean; playerInset: number; search: SearchState;
   trackPreview: { id: string; phase: 'idle' | 'loading' | 'playing' | 'error'; error: string; generation?: number; url?: string };
 };
@@ -47,6 +48,7 @@ const initialState: PlayerState = {
   sizeScale: 1, auraColor: '#B9C7E8', auraMode: 'Static',
   topmost: true, reducedMotion: false, speed: 1, sleepMinutes: 0, pane: 'player', activePlaylist: 'ALL',
   currentIndex: -1, library: [], playlists: [], download: { busy: false, succeeded: false, status: '', error: '', received: 0, total: 0 },
+  onlineTools: { available: true, complete: true, installing: false, failed: false, canInstall: true },
   presentationGeneration: 0, interactive: false, playerInset: 0, search: { query: '', page: 1, pageSize: 8, hasNext: false, busy: false, error: '', items: [] },
   trackPreview: { id: '', phase: 'idle', error: '' },
 };

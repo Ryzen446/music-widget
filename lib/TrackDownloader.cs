@@ -103,6 +103,10 @@ public static class TrackDownloader
                 string input = rawUrl.Trim();
                 Uri link = new Uri(input, UriKind.Absolute);
                 bool isSpotify = link.Host.Equals("open.spotify.com", StringComparison.OrdinalIgnoreCase);
+                string binDir = Path.GetDirectoryName(ytdlpPath);
+                string bundledDeno = Path.Combine(binDir, "deno.exe");
+                string publicOptions = PublicOptions;
+                if (File.Exists(bundledDeno)) publicOptions += "--js-runtimes " + Quote("deno:" + bundledDeno) + " ";
                 string downloadUrl = input;
                 string finalTitle = "";
 
@@ -170,7 +174,7 @@ public static class TrackDownloader
                     {
                         System.Diagnostics.ProcessStartInfo psiSearch = new System.Diagnostics.ProcessStartInfo();
                         psiSearch.FileName = ytdlpPath;
-                        psiSearch.Arguments = PublicOptions + "--flat-playlist --encoding utf-8 --print " +
+                        psiSearch.Arguments = publicOptions + "--flat-playlist --encoding utf-8 --print " +
                             Quote("%(id)s|%(duration)s") + " --no-warnings -- " + Quote("ytsearch8:" + searchQuery);
                         psiSearch.StandardOutputEncoding = Encoding.UTF8;
                         psiSearch.UseShellExecute = false;
@@ -230,7 +234,6 @@ public static class TrackDownloader
 
                 string outTemplate = (String.IsNullOrEmpty(finalTitle) ? "%(title)s" :
                     Regex.Replace(finalTitle, @"[\\/:*?""<>|]", "_").Replace("%", "%%")) + ".%(ext)s";
-                string binDir = Path.GetDirectoryName(ytdlpPath);
                 bool hasFfmpeg = File.Exists(Path.Combine(binDir, "ffmpeg.exe"));
 
                 string audioArgs = hasFfmpeg
@@ -241,7 +244,7 @@ public static class TrackDownloader
                 staging = Path.Combine(libraryPath, ".download-" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(staging);
                 var start = new ProcessStartInfo(ytdlpPath,
-                    PublicOptions + audioArgs + " --no-playlist --playlist-items 1 --no-warnings --no-simulate --no-overwrites" +
+                    publicOptions + audioArgs + " --no-playlist --playlist-items 1 --no-warnings --no-simulate --no-overwrites" +
                     " --windows-filenames --trim-filenames 170 --encoding utf-8 --progress --newline --progress-delta 0.25 " +
                     "--progress-template " + Quote("download:" + ProgressMarker + "%(progress.status)s|%(progress.downloaded_bytes)s|%(progress.total_bytes)s|%(progress.total_bytes_estimate)s") +
                     " --progress-template " + Quote("postprocess:MusicWidgetConversion:%(progress.postprocessor)s|%(progress.status)s") + " --print " +

@@ -76,8 +76,8 @@ test('minimal progress moves between playback samples when the widget is passive
   await expect.poll(() => bar.evaluate(node => node.getAnimations().length)).toBe(0);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('playback-sample', { detail: { position: 6, isPlaying: true } })));
+  await expect.poll(() => bar.evaluate(node => node.getAnimations().length)).toBe(0);
   await expect.poll(fraction).toBeCloseTo(0.6, 3);
-  expect(await bar.evaluate(node => node.getAnimations().length)).toBe(0);
 });
 
 test('the title tooltip is plain text inside the slim player', async ({ page }) => {
@@ -272,6 +272,40 @@ test('the same download progress follows search and link tabs using byte counts'
   await sendProgress('Morceau ajouté', 0, 0, false, true);
   await expect(bar).toHaveCount(0);
   await expect(page.getByText('Morceau ajouté', { exact: true })).toBeVisible();
+});
+
+test('online tools can be enabled without blocking local file import', async ({ page }) => {
+  await page.addInitScript(() => {
+    const bridge = new EventTarget();
+    const onlineTools = { available: false, complete: false, installing: false, failed: false, canInstall: true };
+    const publish = (state: object) => bridge.dispatchEvent(new MessageEvent('message', { data: { type: 'state', ...state } }));
+    const webview = Object.assign(bridge, {
+      postMessage(message: { command: string }) {
+        if (message.command === 'ready') publish({ language: 'en', pane: 'search', onlineTools });
+        if (message.command === 'enableOnlineTools') publish({ onlineTools: { ...onlineTools, installing: true } });
+      },
+    });
+    addEventListener('online-tools-failed', () => publish({ onlineTools: { ...onlineTools, failed: true } }));
+    addEventListener('online-tools-installed', () => publish({ onlineTools: { ...onlineTools, available: true, complete: true } }));
+    Object.defineProperty(window, 'chrome', { configurable: true, value: { webview } });
+  });
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Enable online tools' })).toBeVisible();
+  await expect(page.getByRole('searchbox')).toHaveCount(0);
+  await page.getByRole('tab', { name: 'Link or file' }).click();
+  const localFiles = page.getByRole('button', { name: 'Choose audio files' });
+  await expect(localFiles).toBeEnabled();
+  await page.getByRole('button', { name: 'Enable online tools' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Downloading and verifying online tools' })).toBeVisible();
+  await expect(localFiles).toBeEnabled();
+  await page.evaluate(() => dispatchEvent(new Event('online-tools-failed')));
+  await expect(page.getByRole('alert')).toContainText('Installation failed');
+  await page.getByRole('button', { name: 'Enable online tools' }).click();
+  await page.evaluate(() => dispatchEvent(new Event('online-tools-installed')));
+  await expect(page.getByRole('button', { name: 'Enable online tools' })).toHaveCount(0);
+  await expect(page.getByRole('textbox', { name: /YouTube or Spotify/ })).toBeEnabled();
+  await page.getByRole('tab', { name: 'Search', exact: true }).click();
+  await expect(page.getByRole('searchbox')).toBeEnabled();
 });
 
 test('online search offers pagination and routes a selected result to the downloader', async ({ page }) => {
